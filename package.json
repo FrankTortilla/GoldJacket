@@ -9,23 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.5",
+    "@supabase/supabase-js": "^2",
+    "canvas-confetti": "^1.9.3",
+    "html-to-image": "^1.11.11",
     "next": "14.2.35",
     "react": "^18",
-    "react-dom": "^18",
-    "@supabase/supabase-js": "^2",
-    "@supabase/ssr": "^0.5",
-    "html-to-image": "^1.11.11",
-    "canvas-confetti": "^1.9.3"
+    "react-dom": "^18"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/canvas-confetti": "^1.6.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/canvas-confetti": "^1.6.4",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.35"
+    "typescript": "^5"
   }
 }
