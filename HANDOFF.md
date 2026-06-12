@@ -1,10 +1,24 @@
 # Gold Jacket — Handoff
 
 ## Status
-Prompt 1 complete — app running clean on localhost:3001, ready for Prompt 2
+Prompt 2 partial — scoreEngine.ts complete, gameEngine.ts not yet built
+
+## Completed
+- Prompt 1: Next.js 14 scaffold, Tailwind, fonts, brand colors, placeholder files
+- Prompt 2a: `/lib/scoreEngine.ts` — all 8 functions implemented and pushed
+  - Types: Player, Coach, CoachBonus, UnitScores, Unit, Position
+  - calculateUnitScore, applyCoachBonus, applyChemistryBonus, calculateBustPenalty
+  - projectWins, calculateStrengthRating, calculateDraftGrade, isGoldJacket
 
 ## Next
-Prompt 2 — Data layer (players.ts, coaches.ts, types)
+Build `/lib/gameEngine.ts`:
+- GameState type (see spec in conversation)
+- RoundConfig array (8 rounds with position/era constraints)
+- initGame, generateRoundOptions, draftPlayer, useTeamSkip, useEraSkip, calculateSpeedBonus
+- Import Player/Coach types from scoreEngine.ts
+- Pure functions — no mutation, bust player hidden until isComplete=true
+
+Then: data layer — `/data/players.ts` and `/data/coaches.ts` (Prompt 2 data)
 
 ## Notes
 - `.env.local` is populated with real Supabase credentials (gitignored)
@@ -14,3 +28,4 @@ Prompt 2 — Data layer (players.ts, coaches.ts, types)
 - Tailwind extended with brand colors: `navy`, `gold`, `gold-light`, `card`, `card-border`
 - CSS variables defined in `app/globals.css`
 - All placeholder files in place: data/, lib/, components/, app/ routes
+- Branch: `claude/zen-davinci-tjh04u`
