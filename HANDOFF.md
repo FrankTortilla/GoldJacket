@@ -20,9 +20,11 @@ Prompt 2 (partial) — coaches.ts complete with all 8 coaches. players.ts still 
 | dungy | Tony Dungy | INTs +20% | 1.20 |
 | shula | Don Shula | All Stats +8% | 1.08 |
 
+## Open Issues
+⚠️ OPEN ISSUE: Verify chemistryPlayers IDs in coaches.ts match exact player IDs in players.ts before Prompt 5. coaches.ts uses snake_case, players.ts may use kebab-case.
+
 ## Next
 - Populate `data/players.ts` with NFL legends pool (Prompt 2 continuation)
-- Verify chemistryPlayers IDs match actual player IDs once players.ts is written
 - Build scoring engine in `lib/scoreEngine.ts`
 
 ## Notes
