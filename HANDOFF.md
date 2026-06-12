@@ -1,10 +1,29 @@
 # Gold Jacket — Handoff
 
 ## Status
-Prompt 1 complete — app running clean on localhost:3001, ready for Prompt 2
+Prompt 2 (partial) — coaches.ts complete with all 8 coaches. players.ts still empty.
+
+## Completed
+- `data/coaches.ts` — 8 coaches with full schema: id, name, era, record, superBowls, specialty, bio, bonus, poolBias, chemistryPlayers
+- All multipliers capped at 1.20x maximum
+- Coach count: exactly 8
+
+## Coaches
+| ID | Name | Bonus | Multiplier |
+|---|---|---|---|
+| belichick | Bill Belichick | INTs & Sacks +20% | 1.20 |
+| walsh | Bill Walsh | Passing & Receiving +20% | 1.20 |
+| lombardi | Vince Lombardi | All Stats +10% | 1.10 |
+| johnson | Jimmy Johnson | X Factor +20% | 1.20 |
+| shanahan | Mike Shanahan | Rushing +20% | 1.20 |
+| reid | Andy Reid | Receiving TDs +20% | 1.20 |
+| dungy | Tony Dungy | INTs +20% | 1.20 |
+| shula | Don Shula | All Stats +8% | 1.08 |
 
 ## Next
-Prompt 2 — Data layer (players.ts, coaches.ts, types)
+- Populate `data/players.ts` with NFL legends pool (Prompt 2 continuation)
+- Verify chemistryPlayers IDs match actual player IDs once players.ts is written
+- Build scoring engine in `lib/scoreEngine.ts`
 
 ## Notes
 - `.env.local` is populated with real Supabase credentials (gitignored)
@@ -14,3 +33,5 @@ Prompt 2 — Data layer (players.ts, coaches.ts, types)
 - Tailwind extended with brand colors: `navy`, `gold`, `gold-light`, `card`, `card-border`
 - CSS variables defined in `app/globals.css`
 - All placeholder files in place: data/, lib/, components/, app/ routes
+- Tony Dungy's requested bonus was INTs +22% — capped to 1.20x per project rules
+- Don Shula has empty poolBias (no positional bias by design)
