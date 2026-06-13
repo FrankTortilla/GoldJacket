@@ -175,6 +175,30 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <div
+        style={{
+          textAlign: 'center',
+          paddingTop: '24px',
+          paddingBottom: '32px',
+          marginTop: '24px',
+          borderTop: '1px solid #1f2937',
+        }}
+      >
+        <img
+          src="/caspr-logo.svg"
+          width="56"
+          height="23"
+          alt="Caspr"
+          style={{
+            opacity: 0.3,
+            filter: 'brightness(0) invert(1)',
+            transition: 'opacity 0.2s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.6')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.3')}
+        />
+      </div>
     </main>
   );
 }
