@@ -93,7 +93,7 @@ export function projectWins(unitScores: UnitScores, coachMultiplier: number): nu
     unitScores.xfactor * 0.15;
 
   const adjusted = totalScore * coachMultiplier;
-  const wins = 17 / (1 + Math.exp(-0.08 * (adjusted - 85)));
+  const wins = 17 / (1 + Math.exp(-0.05 * (adjusted - 92)));
   return Math.round(wins * 10) / 10;
 }
 
@@ -102,13 +102,13 @@ export function calculateStrengthRating(totalScore: number): number {
 }
 
 export function calculateDraftGrade(projectedWins: number): string {
-  if (projectedWins >= 16.5) return 'A+';
-  if (projectedWins >= 15.0) return 'A';
-  if (projectedWins >= 13.5) return 'B+';
-  if (projectedWins >= 12.0) return 'B';
-  if (projectedWins >= 10.5) return 'C+';
-  if (projectedWins >= 9.0) return 'C';
-  if (projectedWins >= 7.0) return 'D';
+  if (projectedWins >= 16.0) return 'A+';
+  if (projectedWins >= 14.0) return 'A';
+  if (projectedWins >= 12.5) return 'B+';
+  if (projectedWins >= 11.0) return 'B';
+  if (projectedWins >= 9.5) return 'C+';
+  if (projectedWins >= 8.0) return 'C';
+  if (projectedWins >= 6.0) return 'D';
   return 'F';
 }
 
