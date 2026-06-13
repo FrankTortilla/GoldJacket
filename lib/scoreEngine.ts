@@ -88,10 +88,10 @@ export function calculateBustPenalty(players: Player[], bustPlayerId: string): P
 
 export function projectWins(unitScores: UnitScores, coachMultiplier: number): number {
   // Calibration check (actual values):
-  // score 55  → ~2.0 wins
-  // score 62  → ~5.0 wins
-  // score 70  → ~10.0 wins
-  // score 78  → ~14.0 wins
+  // score 55  → ~3.5 wins
+  // score 62  → ~7.0 wins
+  // score 70  → ~11.0 wins
+  // score 78  → ~14.5 wins
   // score 86  → ~16.0 wins
   // score 93  → ~16.5 wins
   // score 98  → ~17.0 wins
@@ -102,7 +102,7 @@ export function projectWins(unitScores: UnitScores, coachMultiplier: number): nu
     unitScores.xfactor * 0.15;
 
   const totalScore = baseScore * coachMultiplier;
-  const raw = 17 / (1 + Math.exp(-0.15 * (totalScore - 68)));
+  const raw = 17 / (1 + Math.exp(-0.13 * (totalScore - 65)));
   const rounded = Math.round(raw * 2) / 2;
   return rounded;
 }
