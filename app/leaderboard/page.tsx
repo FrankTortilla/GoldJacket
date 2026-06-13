@@ -3,8 +3,27 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import {
+  getDailyLeaderboard,
+  getLeaderboard,
+  type GameResult,
+} from '../../lib/db';
 
-const MOCK_RESULTS = [
+type LeaderboardEntry = {
+  id: string;
+  playerName: string;
+  coachId: string;
+  coachName: string;
+  projectedWins: number;
+  draftGrade: string;
+  isGoldJacket: boolean;
+  gameMode: 'classic' | 'iq';
+  isDailyChallenge: boolean;
+  trashTalk?: string;
+  roster: { name: string; position: string }[];
+};
+
+const MOCK_RESULTS: LeaderboardEntry[] = [
   {
     id: '1',
     playerName: 'Steve',
@@ -14,7 +33,7 @@ const MOCK_RESULTS = [
     draftGrade: 'A+',
     isGoldJacket: true,
     gameMode: 'classic',
-    isDaily: false,
+    isDailyChallenge: false,
     trashTalk: 'Defense wins championships.',
     roster: [
       { name: 'Joe Montana', position: 'QB' },
@@ -26,7 +45,6 @@ const MOCK_RESULTS = [
       { name: 'Deion Sanders', position: 'DB' },
       { name: 'Aaron Donald', position: 'DL' },
     ],
-    createdAt: '2026-06-11',
   },
   {
     id: '2',
@@ -37,7 +55,7 @@ const MOCK_RESULTS = [
     draftGrade: 'A',
     isGoldJacket: false,
     gameMode: 'classic',
-    isDaily: true,
+    isDailyChallenge: true,
     trashTalk: 'West Coast offense never loses.',
     roster: [
       { name: 'Joe Montana', position: 'QB' },
@@ -49,7 +67,6 @@ const MOCK_RESULTS = [
       { name: 'Ed Reed', position: 'DB' },
       { name: 'JJ Watt', position: 'DL' },
     ],
-    createdAt: '2026-06-11',
   },
   {
     id: '3',
@@ -60,7 +77,7 @@ const MOCK_RESULTS = [
     draftGrade: 'A',
     isGoldJacket: false,
     gameMode: 'iq',
-    isDaily: false,
+    isDailyChallenge: false,
     trashTalk: 'Drafted from memory. No stats needed.',
     roster: [
       { name: 'Patrick Mahomes', position: 'QB' },
@@ -72,7 +89,6 @@ const MOCK_RESULTS = [
       { name: 'Troy Polamalu', position: 'DB' },
       { name: 'Aaron Donald', position: 'DL' },
     ],
-    createdAt: '2026-06-10',
   },
   {
     id: '4',
@@ -83,7 +99,7 @@ const MOCK_RESULTS = [
     draftGrade: 'B+',
     isGoldJacket: false,
     gameMode: 'classic',
-    isDaily: true,
+    isDailyChallenge: true,
     trashTalk: 'Cover 2 all day.',
     roster: [
       { name: 'Peyton Manning', position: 'QB' },
@@ -95,7 +111,6 @@ const MOCK_RESULTS = [
       { name: 'Rod Woodson', position: 'DB' },
       { name: 'Reggie White', position: 'DL' },
     ],
-    createdAt: '2026-06-12',
   },
   {
     id: '5',
@@ -106,7 +121,7 @@ const MOCK_RESULTS = [
     draftGrade: 'B',
     isGoldJacket: false,
     gameMode: 'iq',
-    isDaily: false,
+    isDailyChallenge: false,
     trashTalk: 'Old school beats new school.',
     roster: [
       { name: 'Brett Favre', position: 'QB' },
@@ -118,9 +133,8 @@ const MOCK_RESULTS = [
       { name: 'Ronnie Lott', position: 'DB' },
       { name: 'Kevin Greene', position: 'DL' },
     ],
-    createdAt: '2026-06-09',
   },
-] as const;
+];
 
 type ActiveTab = 'today' | 'weekly' | 'alltime';
 type FilterMode = 'all' | 'classic' | 'iq';
@@ -148,12 +162,20 @@ const POSITION_COLORS: Record<string, string> = {
   DB: 'bg-teal-600',
 };
 
-function toDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
+function toLeaderboardEntry(result: GameResult): LeaderboardEntry {
+  return {
+    id: result.id ?? result.shareCode,
+    playerName: result.playerName,
+    coachId: result.coachId,
+    coachName: result.coachName,
+    projectedWins: result.projectedWins,
+    draftGrade: result.draftGrade,
+    isGoldJacket: result.isGoldJacket,
+    gameMode: result.gameMode,
+    isDailyChallenge: result.isDailyChallenge,
+    trashTalk: result.trashTalk,
+    roster: result.roster,
+  };
 }
 
 function gradeClasses(grade: string) {
@@ -173,32 +195,44 @@ export default function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
-  const [today, setToday] = useState('');
+  const [results, setResults] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setToday(toDateKey(new Date()));
-  }, []);
+    let isCancelled = false;
 
-  const todayDailyResults = MOCK_RESULTS.filter(
-    (result) => result.isDaily && result.createdAt === today,
+    async function loadResults() {
+      setIsLoading(true);
+      const data =
+        activeTab === 'today'
+          ? await getDailyLeaderboard()
+          : await getLeaderboard({
+              period: activeTab === 'weekly' ? 'weekly' : 'alltime',
+            });
+
+      if (isCancelled) return;
+
+      setResults(
+        data.length > 0 ? data.map(toLeaderboardEntry) : MOCK_RESULTS
+      );
+      setIsLoading(false);
+    }
+
+    void loadResults();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeTab]);
+
+  const todayDailyResults = results.filter(
+    (result) => result.isDailyChallenge
   );
-
-  const weeklyStart = today ? new Date(`${today}T00:00:00`) : null;
-  weeklyStart?.setDate(weeklyStart.getDate() - 6);
-
-  const filteredResults = MOCK_RESULTS.filter((result) => {
-    const matchesPeriod =
-      activeTab === 'alltime' ||
-      (activeTab === 'today' && result.createdAt === today) ||
-      (activeTab === 'weekly' &&
-        weeklyStart !== null &&
-        new Date(`${result.createdAt}T00:00:00`) >= weeklyStart &&
-        result.createdAt <= today);
-    const matchesMode =
-      filterMode === 'all' || result.gameMode === filterMode;
-
-    return matchesPeriod && matchesMode;
-  }).sort((a, b) => b.projectedWins - a.projectedWins);
+  const filteredResults = results
+    .filter(
+      (result) => filterMode === 'all' || result.gameMode === filterMode
+    )
+    .sort((a, b) => b.projectedWins - a.projectedWins);
 
   return (
     <main className="min-h-screen bg-navy px-4 pb-12 text-white sm:px-6">
@@ -284,7 +318,16 @@ export default function LeaderboardPage() {
         </section>
 
         <section className="space-y-3" aria-live="polite">
-          {filteredResults.length > 0 ? (
+          {isLoading ? (
+            <div className="space-y-3" aria-label="Loading leaderboard">
+              {[0, 1, 2].map((item) => (
+                <div
+                  key={item}
+                  className="h-24 animate-pulse rounded-xl bg-gray-800"
+                />
+              ))}
+            </div>
+          ) : filteredResults.length > 0 ? (
             filteredResults.map((result, index) => {
               const isExpanded = expandedId === result.id;
 
@@ -333,7 +376,7 @@ export default function LeaderboardPage() {
                           Coach {result.coachName}
                         </p>
                         <p className="mt-2 truncate text-sm italic text-gray-500 sm:whitespace-normal">
-                          &ldquo;{result.trashTalk}&rdquo;
+                          &ldquo;{result.trashTalk || 'No comment'}&rdquo;
                         </p>
                       </div>
 

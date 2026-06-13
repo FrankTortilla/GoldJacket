@@ -16,8 +16,19 @@ export default function Home() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [personalBest, setPersonalBest] = useState<number | null>(null);
 
   useEffect(() => {
+    const storedPersonalBest = window.localStorage.getItem(
+      'goldJacket_personalBest'
+    );
+    if (storedPersonalBest) {
+      const parsedPersonalBest = Number(storedPersonalBest);
+      if (Number.isFinite(parsedPersonalBest)) {
+        setPersonalBest(parsedPersonalBest);
+      }
+    }
+
     const frameId = window.requestAnimationFrame(() => setIsReady(true));
     return () => window.cancelAnimationFrame(frameId);
   }, []);
@@ -63,6 +74,11 @@ export default function Home() {
           >
             Build your legend. Earn your jacket.
           </p>
+          {personalBest !== null && (
+            <p className="mt-3 text-sm font-bold text-gold">
+              Your best: {personalBest.toFixed(1)} wins
+            </p>
+          )}
           <div
             className={`mx-auto mt-5 h-px w-20 bg-gold transition-all duration-[600ms] delay-200 ${
               isReady ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'

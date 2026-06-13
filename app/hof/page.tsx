@@ -1,9 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getGoldJackets, type GameResult } from '../../lib/db';
 
-const MOCK_HOF = [
+type HallOfFameEntry = {
+  id: string;
+  playerName: string;
+  coachName: string;
+  projectedWins: number;
+  draftGrade: string;
+  roster: { name: string; position: string; decade: string }[];
+  trashTalk?: string;
+  createdAt: string;
+  shareCode?: string;
+};
+
+const MOCK_HOF: HallOfFameEntry[] = [
   {
     id: '1',
     playerName: 'Steve',
@@ -42,15 +55,53 @@ function formatDate(date: string) {
     day: 'numeric',
     year: 'numeric',
     timeZone: 'UTC',
-  }).format(new Date(`${date}T00:00:00Z`));
+  }).format(new Date(date));
+}
+
+function toHallOfFameEntry(result: GameResult): HallOfFameEntry {
+  return {
+    id: result.id ?? result.shareCode,
+    playerName: result.playerName,
+    coachName: result.coachName,
+    projectedWins: result.projectedWins,
+    draftGrade: result.draftGrade,
+    roster: result.roster,
+    trashTalk: result.trashTalk,
+    createdAt: result.createdAt ?? new Date().toISOString(),
+    shareCode: result.shareCode,
+  };
 }
 
 export default function HallOfFamePage() {
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [entries, setEntries] = useState<HallOfFameEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleShare = async (entryId: string) => {
-    const shareUrl = `${window.location.origin}/results?hof=${entryId}`;
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadEntries() {
+      const data = await getGoldJackets();
+      if (isCancelled) return;
+
+      setEntries(data.length > 0 ? data.map(toHallOfFameEntry) : MOCK_HOF);
+      setIsLoading(false);
+    }
+
+    void loadEntries();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const handleShare = async (entry: HallOfFameEntry) => {
+    const shareUrl = entry.shareCode
+      ? `${window.location.origin}/results?code=${encodeURIComponent(
+          entry.shareCode
+        )}`
+      : `${window.location.origin}/results?hof=${entry.id}`;
     let didCopy = false;
 
     try {
@@ -68,7 +119,7 @@ export default function HallOfFamePage() {
     }
 
     if (didCopy) {
-      setCopiedId(entryId);
+      setCopiedId(entry.id);
       window.setTimeout(() => setCopiedId(null), 2000);
     }
   };
@@ -98,14 +149,23 @@ export default function HallOfFamePage() {
             Only the greatest rosters ever assembled
           </p>
           <span className="mt-4 inline-flex rounded-full border border-gold/30 bg-gold px-4 py-1.5 text-xs font-black uppercase tracking-wider text-navy">
-            {MOCK_HOF.length} Perfect{' '}
-            {MOCK_HOF.length === 1 ? 'Season' : 'Seasons'}
+            {entries.length} Perfect{' '}
+            {entries.length === 1 ? 'Season' : 'Seasons'}
           </span>
         </section>
 
-        {MOCK_HOF.length > 0 ? (
+        {isLoading ? (
+          <section className="space-y-3" aria-label="Loading Hall of Fame">
+            {[0, 1, 2].map((item) => (
+              <div
+                key={item}
+                className="h-28 animate-pulse rounded-xl bg-gray-800"
+              />
+            ))}
+          </section>
+        ) : entries.length > 0 ? (
           <section aria-label="Perfect season rosters">
-            {MOCK_HOF.map((entry) => (
+            {entries.map((entry) => (
               <article
                 key={entry.id}
                 className="mb-4 rounded-2xl border border-gold bg-card p-5 shadow-[0_0_20px_rgba(201,168,76,0.1)]"
@@ -166,12 +226,12 @@ export default function HallOfFamePage() {
                   <span className="mr-1.5 font-[var(--font-bebas)] text-xl not-italic text-gold">
                     “
                   </span>
-                  {entry.trashTalk}
+                  {entry.trashTalk || 'A perfect season speaks for itself.'}
                 </blockquote>
 
                 <button
                   type="button"
-                  onClick={() => handleShare(entry.id)}
+                  onClick={() => void handleShare(entry)}
                   className="mt-4 rounded-lg border border-gold px-4 py-2 text-xs font-bold text-gold transition-all hover:bg-gold hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                 >
                   {copiedId === entry.id ? 'Copied!' : 'Share This Roster'}

@@ -1,7 +1,7 @@
 # Gold Jacket - Handoff
 
 ## Status
-Prompts 1, 2, 3, and 4 are complete. The project is ready for Prompt 5 - Supabase integration.
+Prompts 1, 2, 3, 4, and 5 are complete. The project is ready for Prompt 6 - Shareable roster card.
 
 ## Completed
 - Prompt 1: Next.js 14 scaffold, Tailwind CSS, Supabase setup, fonts, brand colors, routes, and placeholder structure
@@ -25,9 +25,14 @@ Prompts 1, 2, 3, and 4 are complete. The project is ready for Prompt 5 - Supabas
   - `app/results/page.tsx`
   - `app/leaderboard/page.tsx`
   - `app/hof/page.tsx`
+- Prompt 5: Supabase integration
+  - `lib/db.ts` - result persistence and leaderboard queries
+  - Results saving and share-code loading
+  - Live leaderboard and Hall of Fame data
+  - Home screen personal-best banner
 
 ## Next
-Prompt 5 - Supabase integration.
+Prompt 6 - Shareable roster card.
 
 ## Notes
 - All completed Prompt 2 and Prompt 3 work is integrated into `main`.
@@ -37,3 +42,4 @@ Prompt 5 - Supabase integration.
 - Font variables are `--font-bebas` and `--font-figtree`.
 - Tailwind brand colors are `navy`, `gold`, `gold-light`, `card`, and `card-border`.
 - CSS variables are defined in `app/globals.css`.
+- Run the Prompt 5 SQL in the Supabase dashboard before testing database features.

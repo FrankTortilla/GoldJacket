@@ -9,7 +9,13 @@ import {
 } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { decodeResult, encodeResult } from '../../lib/shareUtils';
+import { encodeResult } from '../../lib/shareUtils';
+import {
+  getResultByShareCode,
+  saveResult,
+  type GameResult,
+} from '../../lib/db';
+import { getDailySeed } from '../../lib/dailyChallenge';
 import {
   calculateDraftGrade,
   isGoldJacket,
@@ -48,15 +54,6 @@ interface ScoreResult {
 interface CompletedGame {
   state: GameState;
   scoreResult: ScoreResult;
-}
-
-interface SharedPayload {
-  coachId?: string | null;
-  rosterIds?: Array<string | null>;
-  seed?: string;
-  projectedWins?: number;
-  draftGrade?: string;
-  isGoldJacket?: boolean;
 }
 
 interface DisplayResult {
@@ -206,29 +203,35 @@ function normalizeCompletedGame(
   };
 }
 
-function loadSharedResult(code: string): DisplayResult | null {
-  const decoded = decodeResult(code);
-  if (!decoded) return null;
+function normalizeDatabaseResult(gameResult: GameResult): DisplayResult | null {
+  const coach = coaches.find(
+    (candidate) => candidate.id === gameResult.coachId
+  );
+  const roster: Player[] = gameResult.roster.map((storedPlayer, index) => {
+    const canonicalPlayer = players.find(
+      (candidate) => candidate.name === storedPlayer.name
+    );
 
-  const payload = decoded.score as SharedPayload;
-  const coach = coaches.find((candidate) => candidate.id === payload.coachId);
-  const roster = (payload.rosterIds ?? [])
-    .map((playerId) =>
-      playerId
-        ? players.find((candidate) => candidate.id === playerId) ?? null
-        : null
-    )
-    .filter((player): player is RuntimePlayer => Boolean(player));
+    if (canonicalPlayer) return canonicalPlayer;
+
+    return {
+      id: `shared-${index}-${storedPlayer.name
+        .toLowerCase()
+        .replaceAll(' ', '-')}`,
+      name: storedPlayer.name,
+      position: normalizePosition(storedPlayer.position),
+      era: storedPlayer.decade,
+      positionScore: storedPlayer.positionScore,
+      eraMultiplier: 1,
+    };
+  });
 
   if (!coach || roster.length === 0) return null;
 
-  const projectedWins =
-    typeof payload.projectedWins === 'number' ? payload.projectedWins : 10;
-  const unitScores = getFallbackUnitScores(projectedWins);
   const state: GameState = {
-    gameId: `shared-${payload.seed ?? 'result'}`,
-    seed: payload.seed ?? 'shared',
-    mode: 'classic',
+    gameId: `shared-${gameResult.id ?? gameResult.shareCode}`,
+    seed: gameResult.seed,
+    mode: gameResult.gameMode,
     coach,
     currentRound: 9,
     roster,
@@ -242,10 +245,11 @@ function loadSharedResult(code: string): DisplayResult | null {
   };
 
   return normalizeCompletedGame(state, {
-    projectedWins,
-    unitScores,
-    draftGrade: payload.draftGrade,
-    isGoldJacket: payload.isGoldJacket,
+    projectedWins: gameResult.projectedWins,
+    unitScores: gameResult.unitScores,
+    strengthRating: gameResult.strengthRating,
+    draftGrade: gameResult.draftGrade,
+    isGoldJacket: gameResult.isGoldJacket,
   });
 }
 
@@ -254,81 +258,115 @@ function ResultsExperience() {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<DisplayResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
   const [isNewPersonalBest, setIsNewPersonalBest] = useState(false);
   const [shareToast, setShareToast] = useState(false);
   const [nickname, setNickname] = useState('');
   const [trashTalk, setTrashTalk] = useState('');
-  const [isSaved, setIsSaved] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<
+    'idle' | 'saving' | 'success' | 'error'
+  >('idle');
+  const [savedShareCode, setSavedShareCode] = useState<string | null>(null);
 
   useEffect(() => {
-    let loadedResult: DisplayResult | null = null;
-    const completedGameRaw = window.sessionStorage.getItem(
-      'goldJacket_completedGame'
-    );
+    let isCancelled = false;
 
-    if (completedGameRaw) {
-      try {
-        const completedGame = JSON.parse(completedGameRaw) as CompletedGame;
-        loadedResult = normalizeCompletedGame(
-          completedGame.state,
-          completedGame.scoreResult
-        );
-      } catch {
-        loadedResult = null;
+    async function loadResult() {
+      const code = searchParams.get('code');
+
+      if (code) {
+        const databaseResult = await getResultByShareCode(code);
+        if (isCancelled) return;
+
+        const sharedResult = databaseResult
+          ? normalizeDatabaseResult(databaseResult)
+          : null;
+
+        if (!sharedResult) {
+          setIsNotFound(true);
+          setIsLoading(false);
+          return;
+        }
+
+        setSavedShareCode(code);
+        setSaveStatus('success');
+        setResult(sharedResult);
+        setIsLoading(false);
+        return;
       }
-    }
 
-    if (!loadedResult) {
-      const currentStateRaw = window.sessionStorage.getItem(
-        'goldJacketGameState'
-      );
-      const currentResultRaw = window.sessionStorage.getItem(
-        'goldJacketResult'
+      let loadedResult: DisplayResult | null = null;
+      const completedGameRaw = window.sessionStorage.getItem(
+        'goldJacket_completedGame'
       );
 
-      if (currentStateRaw && currentResultRaw) {
+      if (completedGameRaw) {
         try {
-          const state = JSON.parse(currentStateRaw) as GameState;
-          const storedResult = JSON.parse(currentResultRaw) as {
-            gameState?: GameState;
-          } & ScoreResult;
+          const completedGame = JSON.parse(completedGameRaw) as CompletedGame;
           loadedResult = normalizeCompletedGame(
-            storedResult.gameState ?? state,
-            storedResult
+            completedGame.state,
+            completedGame.scoreResult
           );
         } catch {
           loadedResult = null;
         }
       }
-    }
 
-    if (!loadedResult) {
-      const code = searchParams.get('code');
-      if (code) loadedResult = loadSharedResult(code);
-    }
+      if (!loadedResult) {
+        const currentStateRaw = window.sessionStorage.getItem(
+          'goldJacketGameState'
+        );
+        const currentResultRaw = window.sessionStorage.getItem(
+          'goldJacketResult'
+        );
 
-    window.sessionStorage.removeItem('goldJacket_completedGame');
-    window.sessionStorage.removeItem('goldJacketGameState');
-    window.sessionStorage.removeItem('goldJacketResult');
+        if (currentStateRaw && currentResultRaw) {
+          try {
+            const state = JSON.parse(currentStateRaw) as GameState;
+            const storedResult = JSON.parse(currentResultRaw) as {
+              gameState?: GameState;
+            } & ScoreResult;
+            loadedResult = normalizeCompletedGame(
+              storedResult.gameState ?? state,
+              storedResult
+            );
+          } catch {
+            loadedResult = null;
+          }
+        }
+      }
 
-    if (!loadedResult) {
-      router.replace('/');
-      return;
-    }
+      window.sessionStorage.removeItem('goldJacket_completedGame');
+      window.sessionStorage.removeItem('goldJacketGameState');
+      window.sessionStorage.removeItem('goldJacketResult');
 
-    const personalBest = Number(
-      window.localStorage.getItem('goldJacket_personalBest') ?? 0
-    );
-    if (loadedResult.projectedWins > personalBest) {
-      window.localStorage.setItem(
-        'goldJacket_personalBest',
-        String(loadedResult.projectedWins)
+      if (!loadedResult) {
+        router.replace('/');
+        return;
+      }
+
+      const personalBest = Number(
+        window.localStorage.getItem('goldJacket_personalBest') ?? 0
       );
-      setIsNewPersonalBest(true);
+      if (loadedResult.projectedWins > personalBest) {
+        window.localStorage.setItem(
+          'goldJacket_personalBest',
+          String(loadedResult.projectedWins)
+        );
+        setIsNewPersonalBest(true);
+      }
+
+      if (!isCancelled) {
+        setResult(loadedResult);
+        setIsLoading(false);
+      }
     }
 
-    setResult(loadedResult);
-    setIsLoading(false);
+    void loadResult();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [router, searchParams]);
 
   useEffect(() => {
@@ -371,11 +409,13 @@ function ResultsExperience() {
   async function handleShare() {
     if (!result) return;
 
-    const code = encodeResult(result.state, {
-      projectedWins: result.projectedWins,
-      draftGrade: result.draftGrade,
-      isGoldJacket: result.achievedGoldJacket,
-    });
+    const code =
+      savedShareCode ??
+      encodeResult(result.state, {
+        projectedWins: result.projectedWins,
+        draftGrade: result.draftGrade,
+        isGoldJacket: result.achievedGoldJacket,
+      });
     const shareUrl = `${window.location.origin}/results?code=${encodeURIComponent(code)}`;
 
     await window.navigator.clipboard.writeText(shareUrl);
@@ -396,18 +436,76 @@ function ResultsExperience() {
     if (label === 'BUILD ANOTHER') handleReset();
   }
 
-  function handleSave() {
-    if (!result || isSaved) return;
+  async function handleSave() {
+    if (!result || saveStatus === 'saving' || saveStatus === 'success') return;
 
-    console.log('Leaderboard score', {
-      nickname,
-      trashTalk,
+    setSaveStatus('saving');
+    const shareCode = encodeResult(result.state, {
       projectedWins: result.projectedWins,
       draftGrade: result.draftGrade,
-      coachId: result.coach.id,
-      rosterIds: result.roster.map((player) => player.id),
+      isGoldJacket: result.achievedGoldJacket,
     });
-    setIsSaved(true);
+    const isDailyChallenge = result.state.seed === getDailySeed();
+    const gameResult: GameResult = {
+      playerName: nickname.trim() || 'Anonymous',
+      coachId: result.coach.id,
+      coachName: result.coach.name,
+      roster: result.roster.map((player) => ({
+        name: player.name,
+        position: player.position,
+        decade: player.era,
+        positionScore: player.positionScore,
+      })),
+      projectedWins: result.projectedWins,
+      strengthRating: result.strengthRating,
+      unitScores: result.unitScores,
+      draftGrade: result.draftGrade,
+      isGoldJacket: result.achievedGoldJacket,
+      gameMode: result.state.mode,
+      shareCode,
+      seed: result.state.seed,
+      isDailyChallenge,
+      challengeDate: isDailyChallenge
+        ? new Date().toISOString().slice(0, 10)
+        : undefined,
+      trashTalk: trashTalk.trim() || undefined,
+    };
+    const savedCode = await saveResult(gameResult);
+
+    if (!savedCode) {
+      setSaveStatus('error');
+      return;
+    }
+
+    setSavedShareCode(savedCode);
+    window.history.replaceState(
+      {},
+      '',
+      `/results?code=${encodeURIComponent(savedCode)}`
+    );
+    setSaveStatus('success');
+  }
+
+  if (isNotFound) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-navy px-5 text-white">
+        <div className="w-full max-w-sm rounded-2xl border border-card-border bg-card p-7 text-center">
+          <h1 className="font-[var(--font-bebas)] text-3xl tracking-wide text-gold">
+            Result not found
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            This shared result may have been removed or the link is invalid.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            className="mt-6 w-full rounded-lg bg-gold px-4 py-3 text-sm font-bold text-navy transition-colors hover:bg-gold-light"
+          >
+            BACK TO HOME
+          </button>
+        </div>
+      </main>
+    );
   }
 
   if (isLoading || !result) {
@@ -459,7 +557,7 @@ function ResultsExperience() {
           />
         </div>
 
-        {!isSaved ? (
+        {saveStatus !== 'success' ? (
           <section className="mt-6 rounded-2xl border border-card-border bg-card p-5">
             <h2 className="font-[var(--font-bebas)] text-2xl tracking-wide text-white">
               Save Your Score
@@ -483,16 +581,24 @@ function ResultsExperience() {
               />
               <button
                 type="button"
-                onClick={handleSave}
-                className="w-full rounded-lg bg-gold px-4 py-3 text-sm font-bold text-navy transition-colors hover:bg-gold-light"
+                onClick={() => void handleSave()}
+                disabled={saveStatus === 'saving'}
+                className="w-full rounded-lg bg-gold px-4 py-3 text-sm font-bold text-navy transition-colors hover:bg-gold-light disabled:cursor-wait disabled:opacity-60"
               >
-                SAVE TO LEADERBOARD
+                {saveStatus === 'saving'
+                  ? 'SAVING...'
+                  : 'SAVE TO LEADERBOARD'}
               </button>
+              {saveStatus === 'error' && (
+                <p className="text-center text-sm font-bold text-red-300">
+                  Save failed, try again
+                </p>
+              )}
             </div>
           </section>
         ) : (
           <div className="mt-6 rounded-xl border border-green-400/40 bg-green-400/10 px-4 py-3 text-center text-sm font-bold text-green-300">
-            Score saved!
+            Saved to leaderboard!
           </div>
         )}
 
