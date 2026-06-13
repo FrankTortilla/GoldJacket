@@ -36,7 +36,7 @@ Prompt 6 - Shareable roster card.
 
 ## Notes
 - All completed Prompt 2 and Prompt 3 work is integrated into `main`.
-- `.env.local` contains real Supabase credentials and is gitignored.
+- `.env.local` is gitignored and must contain the real Supabase credentials for local testing.
 - `next.config.mjs` is used for Next.js 14.
 - `autoprefixer` is included in devDependencies for Tailwind PostCSS.
 - Font variables are `--font-bebas` and `--font-figtree`.
