@@ -41,6 +41,7 @@ interface UnitBarProps {
   label: string;
   score: number;
   isMounted: boolean;
+  delay: number;
 }
 
 const WIN_TICKS = [
@@ -76,7 +77,7 @@ function clampPercentage(value: number): number {
 
 function ignoreSelection() {}
 
-function UnitBar({ label, score, isMounted }: UnitBarProps) {
+function UnitBar({ label, score, isMounted, delay }: UnitBarProps) {
   const normalizedScore = clampPercentage(score);
 
   return (
@@ -94,7 +95,7 @@ function UnitBar({ label, score, isMounted }: UnitBarProps) {
           className="h-full rounded-full bg-gold"
           style={{
             width: isMounted ? `${normalizedScore}%` : '0%',
-            transition: 'width 800ms ease-out',
+            transition: `width 800ms ease-out ${delay}ms`,
           }}
         />
       </div>
@@ -115,6 +116,8 @@ export default function ResultCard({
   bustPlayer,
 }: ResultCardProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const [displayWins, setDisplayWins] = useState(0);
+  const [showGrade, setShowGrade] = useState(false);
   const resolvedDraftGrade = draftGrade || calculateDraftGrade(projectedWins);
   const achievedGoldJacket =
     isGoldJacket || qualifiesForGoldJacket(projectedWins);
@@ -126,15 +129,40 @@ export default function ResultCard({
     return () => window.cancelAnimationFrame(frameId);
   }, []);
 
+  useEffect(() => {
+    const duration = 1500;
+    const startTime = performance.now();
+    let frameId = 0;
+
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      setDisplayWins(Math.round(projectedWins * easedProgress));
+
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(animate);
+      } else {
+        setShowGrade(true);
+      }
+    };
+
+    frameId = window.requestAnimationFrame(animate);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [projectedWins]);
+
   return (
     <section className="w-full rounded-2xl border border-card-border bg-card p-5 sm:p-7">
       <header className="text-center">
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <p className="font-[var(--font-bebas)] text-[56px] leading-none tracking-wide text-gold">
-            {projectedWins} / 17
+          <p className="font-[var(--font-bebas)] text-[clamp(2.75rem,15vw,3.5rem)] leading-none tracking-wide text-gold">
+            {displayWins} / 17
           </p>
           <span
-            className={`rounded-full px-4 py-1.5 text-sm font-bold ${getGradeClasses(resolvedDraftGrade)}`}
+            className={`rounded-full px-4 py-1.5 text-sm font-bold transition-opacity ${
+              showGrade
+                ? 'animate-[gradeBounce_500ms_cubic-bezier(0.34,1.56,0.64,1)] opacity-100'
+                : 'scale-75 opacity-0'
+            } ${getGradeClasses(resolvedDraftGrade)}`}
           >
             {resolvedDraftGrade}
           </span>
@@ -178,16 +206,19 @@ export default function ResultCard({
           label="Offense"
           score={unitScores.offense}
           isMounted={isMounted}
+          delay={0}
         />
         <UnitBar
           label="Defense"
           score={unitScores.defense}
           isMounted={isMounted}
+          delay={200}
         />
         <UnitBar
           label="X Factor"
           score={unitScores.xfactor}
           isMounted={isMounted}
+          delay={400}
         />
       </div>
 
@@ -283,7 +314,7 @@ export default function ResultCard({
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-2 gap-3">
+      <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button
           type="button"
           className="rounded-lg bg-gold px-4 py-3 text-sm font-bold text-navy transition-colors hover:bg-gold-light"
@@ -297,6 +328,14 @@ export default function ResultCard({
           Build Another
         </button>
       </div>
+
+      <style>{`
+        @keyframes gradeBounce {
+          0% { opacity: 0; transform: scale(0.65); }
+          65% { opacity: 1; transform: scale(1.12); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
     </section>
   );
 }

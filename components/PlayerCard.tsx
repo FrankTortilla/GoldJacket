@@ -7,6 +7,7 @@ interface PlayerCardProps {
   player: Player;
   mode: 'classic' | 'iq';
   isSelected: boolean;
+  isDrafting?: boolean;
   onSelect: (playerId: string) => void;
 }
 
@@ -106,6 +107,7 @@ export default function PlayerCard({
   player,
   mode,
   isSelected,
+  isDrafting = false,
   onSelect,
 }: PlayerCardProps) {
   const [hasGlow, setHasGlow] = useState(false);
@@ -122,6 +124,8 @@ export default function PlayerCard({
       onFocus={() => setHasGlow(true)}
       onBlur={() => setHasGlow(false)}
       className={`relative min-h-[120px] w-full rounded-xl border bg-card p-4 text-left transition-all duration-200 hover:scale-[1.02] hover:border-gold focus-visible:scale-[1.02] focus-visible:border-gold focus-visible:outline-none ${
+        isDrafting ? 'pointer-events-none animate-[draftToRoster_350ms_ease-in_forwards]' : ''
+      } ${
         isSelected ? 'border-gold' : 'border-card-border'
       }`}
       style={{

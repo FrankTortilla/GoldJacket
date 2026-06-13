@@ -125,7 +125,7 @@ export default function HallOfFamePage() {
   };
 
   return (
-    <main className="min-h-screen bg-navy px-4 pb-12 text-white sm:px-6">
+    <main className="min-h-screen overflow-x-hidden bg-navy px-4 pb-12 text-white sm:px-6">
       <div className="mx-auto w-full max-w-2xl">
         <nav className="relative flex h-20 items-center justify-center">
           <button
@@ -168,7 +168,7 @@ export default function HallOfFamePage() {
             {entries.map((entry) => (
               <article
                 key={entry.id}
-                className="mb-4 rounded-2xl border border-gold bg-card p-5 shadow-[0_0_20px_rgba(201,168,76,0.1)]"
+                className="mb-4 w-full rounded-2xl border border-gold bg-card p-4 shadow-[0_0_20px_rgba(201,168,76,0.1)] sm:p-5"
               >
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
                   <span className="rounded-full bg-gold px-3 py-1 text-xs font-black text-navy">

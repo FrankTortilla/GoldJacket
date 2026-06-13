@@ -61,7 +61,7 @@ export default function Home() {
       <div className="relative z-10 flex w-full max-w-4xl flex-col items-center">
         <header className="text-center">
           <h1
-            className={`bg-gradient-to-r from-gold to-gold-light bg-clip-text font-[var(--font-bebas)] text-[52px] leading-none tracking-[0.06em] text-transparent transition-all duration-[600ms] sm:text-7xl ${
+            className={`bg-gradient-to-r from-gold to-gold-light bg-clip-text font-[var(--font-bebas)] text-[clamp(2.75rem,15vw,4.5rem)] leading-none tracking-[0.06em] text-transparent transition-all duration-[600ms] ${
               isReady ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
             }`}
           >
@@ -87,7 +87,7 @@ export default function Home() {
         </header>
 
         <section
-          className={`mt-10 grid w-full max-w-2xl grid-cols-1 gap-5 transition-all duration-[600ms] delay-[400ms] md:grid-cols-2 ${
+          className={`mt-10 grid w-full max-w-2xl grid-cols-1 gap-5 transition-all duration-[600ms] delay-300 md:grid-cols-2 ${
             isReady ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
           }`}
           aria-label="Choose a game mode"
@@ -139,7 +139,7 @@ export default function Home() {
           <button
             type="button"
             onClick={() => router.push('/draft?mode=classic&daily=true')}
-            className="rounded-full border border-gold px-5 py-2 text-xs font-bold tracking-wider text-gold transition-colors hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+            className="min-h-12 rounded-full border border-gold px-5 py-2 text-xs font-bold tracking-wider text-gold transition-colors hover:bg-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
           >
             DAILY CHALLENGE
           </button>

@@ -2,22 +2,61 @@
 
 import type { GameState } from './gameEngine';
 
+export interface SharedResultPayload {
+  coachId: string | null;
+  rosterIds: (string | null)[];
+  seed: string;
+  mode: GameState['mode'];
+  bustPlayerId: string;
+  projectedWins?: number;
+  unitScores?: unknown;
+  strengthRating?: number;
+  draftGrade?: string;
+  isGoldJacket?: boolean;
+}
+
 export function encodeResult(state: GameState, score: object): string {
+  const scoreData = score as Record<string, unknown>;
   const payload = {
     coachId: state.coach?.id ?? null,
     rosterIds: state.roster.map((p) => p?.id ?? null),
     seed: state.seed,
-    projectedWins: (score as Record<string, unknown>).projectedWins,
-    draftGrade: (score as Record<string, unknown>).draftGrade,
-    isGoldJacket: (score as Record<string, unknown>).isGoldJacket,
+    mode: state.mode,
+    bustPlayerId: state.bustPlayerId,
+    projectedWins: scoreData.projectedWins,
+    unitScores: scoreData.unitScores,
+    strengthRating: scoreData.strengthRating,
+    draftGrade: scoreData.draftGrade,
+    isGoldJacket: scoreData.isGoldJacket,
   };
   return btoa(JSON.stringify(payload));
 }
 
-export function decodeResult(code: string): { state: Partial<GameState>; score: object } | null {
+export function decodeResult(code: string): SharedResultPayload | null {
   try {
-    const parsed = JSON.parse(atob(code));
-    return { state: parsed, score: parsed };
+    const parsed = JSON.parse(atob(code)) as Partial<SharedResultPayload>;
+
+    if (
+      typeof parsed.seed !== 'string' ||
+      !Array.isArray(parsed.rosterIds) ||
+      (parsed.coachId !== null && typeof parsed.coachId !== 'string')
+    ) {
+      return null;
+    }
+
+    return {
+      coachId: parsed.coachId ?? null,
+      rosterIds: parsed.rosterIds,
+      seed: parsed.seed,
+      mode: parsed.mode === 'iq' ? 'iq' : 'classic',
+      bustPlayerId:
+        typeof parsed.bustPlayerId === 'string' ? parsed.bustPlayerId : '',
+      projectedWins: parsed.projectedWins,
+      unitScores: parsed.unitScores,
+      strengthRating: parsed.strengthRating,
+      draftGrade: parsed.draftGrade,
+      isGoldJacket: parsed.isGoldJacket,
+    };
   } catch {
     return null;
   }

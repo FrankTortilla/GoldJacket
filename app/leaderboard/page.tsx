@@ -235,7 +235,7 @@ export default function LeaderboardPage() {
     .sort((a, b) => b.projectedWins - a.projectedWins);
 
   return (
-    <main className="min-h-screen bg-navy px-4 pb-12 text-white sm:px-6">
+    <main className="min-h-screen overflow-x-hidden bg-navy px-4 pb-12 text-white sm:px-6">
       <div className="mx-auto w-full max-w-3xl">
         <nav className="relative flex h-20 items-center justify-center">
           <button
@@ -276,7 +276,7 @@ export default function LeaderboardPage() {
         )}
 
         <section aria-label="Leaderboard filters" className="mb-6">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid w-full grid-cols-3 gap-2">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -285,7 +285,7 @@ export default function LeaderboardPage() {
                   setActiveTab(tab.id);
                   setExpandedId(null);
                 }}
-                className={`rounded-lg px-3 py-3 text-sm font-bold transition-colors ${
+                className={`min-w-0 rounded-lg px-2 py-3 text-xs font-bold transition-colors sm:px-3 sm:text-sm ${
                   activeTab === tab.id
                     ? 'bg-gold text-navy'
                     : 'bg-card-border text-gray-400 hover:text-white'
@@ -296,7 +296,7 @@ export default function LeaderboardPage() {
             ))}
           </div>
 
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:flex sm:justify-center">
             {MODE_FILTERS.map((filter) => (
               <button
                 key={filter.id}
@@ -305,7 +305,7 @@ export default function LeaderboardPage() {
                   setFilterMode(filter.id);
                   setExpandedId(null);
                 }}
-                className={`rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${
+                className={`min-w-0 rounded-full border px-2 py-1.5 text-[11px] font-bold transition-colors sm:px-4 sm:text-xs ${
                   filterMode === filter.id
                     ? 'border-gold bg-gold/10 text-gold'
                     : 'border-card-border text-gray-500 hover:border-gray-600 hover:text-gray-300'
@@ -349,7 +349,7 @@ export default function LeaderboardPage() {
                     aria-expanded={isExpanded}
                     aria-controls={`roster-${result.id}`}
                   >
-                    <div className="flex items-start gap-3 sm:items-center sm:gap-4">
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 sm:flex sm:items-center sm:gap-4">
                       <span
                         className={`w-7 shrink-0 font-[var(--font-bebas)] text-2xl ${
                           index < 3 ? 'text-gold' : 'text-gray-600'
@@ -380,7 +380,7 @@ export default function LeaderboardPage() {
                         </p>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-3">
+                      <div className="col-start-2 flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-start">
                         <div className="text-right">
                           <p className="font-[var(--font-bebas)] text-3xl leading-none text-white sm:text-4xl">
                             {Math.round(result.projectedWins)}

@@ -103,8 +103,12 @@ export function generateRoundOptions(
 
   // Weight bias players to the front before shuffle
   if (coach?.poolBias && coach.poolBias.length > 0) {
-    const biased = pool.filter((p) => coach.poolBias!.includes(p.id));
-    const rest = pool.filter((p) => !coach.poolBias!.includes(p.id));
+    const isBiased = (player: Player) =>
+      coach.poolBias!.includes(player.id) ||
+      coach.poolBias!.includes(player.position) ||
+      coach.poolBias!.includes(player.era);
+    const biased = pool.filter(isBiased);
+    const rest = pool.filter((player) => !isBiased(player));
     pool = [...biased, ...biased, ...rest]; // double-weight bias players
   }
 
@@ -179,10 +183,29 @@ export function useEraSkip(state: GameState, players: Player[]): GameState {
 
   const config = ROUND_CONFIG[state.currentRound - 1];
   const currentEra = config.era;
+  const draftedIds = state.roster.filter(Boolean).map((p) => p!.id);
+
+  if (currentEra === 'any') {
+    const newOptions = generateRoundOptions(
+      state.currentRound,
+      state.coach,
+      draftedIds,
+      `${state.seed}${state.currentRound}eraskip`,
+      players
+    );
+    const updatedOptions = [...state.roundOptions];
+    updatedOptions[state.currentRound - 1] = newOptions;
+
+    return {
+      ...state,
+      roundOptions: updatedOptions,
+      eraSkipsRemaining: state.eraSkipsRemaining - 1,
+    };
+  }
+
   const altEras = ALL_ERAS.filter((e) => e !== currentEra);
   const altEra = altEras[hashString(`${state.seed}${state.currentRound}era`) % altEras.length];
 
-  const draftedIds = state.roster.filter(Boolean).map((p) => p!.id);
   const pool = players.filter(
     (p) => config.position.includes(p.position) && p.era === altEra && !draftedIds.includes(p.id)
   );

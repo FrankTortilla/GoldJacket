@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
 
 export type GameResult = {
   id?: string;
@@ -110,6 +110,9 @@ function getUtcDateKey(date = new Date()): string {
 export async function saveResult(
   result: GameResult
 ): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
   const { data, error } = await supabase
     .from('game_results')
     .insert(toRow(result))
@@ -131,6 +134,9 @@ export async function getLeaderboard(
     limit?: number;
   } = {}
 ): Promise<GameResult[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
   const {
     mode = 'all',
     period = 'alltime',
@@ -161,6 +167,9 @@ export async function getLeaderboard(
 }
 
 export async function getGoldJackets(): Promise<GameResult[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
   const { data, error } = await supabase
     .from('game_results')
     .select('*')
@@ -178,6 +187,9 @@ export async function getGoldJackets(): Promise<GameResult[]> {
 export async function getDailyLeaderboard(
   date = getUtcDateKey()
 ): Promise<GameResult[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
   const { data, error } = await supabase
     .from('game_results')
     .select('*')
@@ -196,6 +208,9 @@ export async function getDailyLeaderboard(
 export async function getResultByShareCode(
   code: string
 ): Promise<GameResult | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
   const { data, error } = await supabase
     .from('game_results')
     .select('*')

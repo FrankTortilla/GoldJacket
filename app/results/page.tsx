@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { toPng } from 'html-to-image';
 import ShareCard from '../../components/ShareCard';
-import { encodeResult } from '../../lib/shareUtils';
+import { decodeResult, encodeResult } from '../../lib/shareUtils';
 import { generateScoutingReport } from '../../lib/scoutingReport';
 import {
   getResultByShareCode,
@@ -126,9 +126,6 @@ const coaches: RuntimeCoach[] = coachData.map((coach) => ({
     ...coach.bonus,
     unit: normalizeCoachUnit(coach.bonus.unit),
   },
-  chemistryPlayers: coach.chemistryPlayers.map((playerId) =>
-    playerId.replaceAll('_', '-')
-  ),
 }));
 
 function isUnitScores(value: unknown): value is UnitScores {
@@ -259,6 +256,46 @@ function normalizeDatabaseResult(gameResult: GameResult): DisplayResult | null {
   });
 }
 
+function normalizeEncodedResult(code: string): DisplayResult | null {
+  const payload = decodeResult(code);
+  if (!payload?.coachId) return null;
+
+  const coach = coaches.find((candidate) => candidate.id === payload.coachId);
+  const roster = payload.rosterIds
+    .map((playerId) =>
+      players.find((candidate) => candidate.id === playerId)
+    )
+    .filter((player): player is RuntimePlayer => Boolean(player));
+
+  if (!coach || roster.length === 0) return null;
+
+  const state: GameState = {
+    gameId: `shared-${payload.seed}`,
+    seed: payload.seed,
+    mode: payload.mode,
+    coach,
+    currentRound: 9,
+    roster,
+    bustPlayerId: payload.bustPlayerId,
+    teamSkipsRemaining: 0,
+    eraSkipsRemaining: 0,
+    draftStartTime: 0,
+    roundStartTimes: [],
+    roundOptions: [],
+    isComplete: true,
+  };
+
+  return normalizeCompletedGame(state, {
+    projectedWins: payload.projectedWins,
+    unitScores: isUnitScores(payload.unitScores)
+      ? payload.unitScores
+      : undefined,
+    strengthRating: payload.strengthRating,
+    draftGrade: payload.draftGrade,
+    isGoldJacket: payload.isGoldJacket,
+  });
+}
+
 function ResultsExperience() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -289,7 +326,7 @@ function ResultsExperience() {
 
         const sharedResult = databaseResult
           ? normalizeDatabaseResult(databaseResult)
-          : null;
+          : normalizeEncodedResult(code);
 
         if (!sharedResult) {
           setIsNotFound(true);
@@ -452,6 +489,8 @@ function ResultsExperience() {
       savedShareCode ??
       encodeResult(result.state, {
         projectedWins: result.projectedWins,
+        unitScores: result.unitScores,
+        strengthRating: result.strengthRating,
         draftGrade: result.draftGrade,
         isGoldJacket: result.achievedGoldJacket,
       });
@@ -512,6 +551,8 @@ function ResultsExperience() {
     setSaveStatus('saving');
     const shareCode = encodeResult(result.state, {
       projectedWins: result.projectedWins,
+      unitScores: result.unitScores,
+      strengthRating: result.strengthRating,
       draftGrade: result.draftGrade,
       isGoldJacket: result.achievedGoldJacket,
     });
@@ -629,7 +670,7 @@ function ResultsExperience() {
         </div>
 
         {saveStatus !== 'success' ? (
-          <section className="mt-6 rounded-2xl border border-card-border bg-card p-5">
+          <section className="mt-6 rounded-2xl border border-card-border bg-card p-4 sm:p-5">
             <h2 className="font-[var(--font-bebas)] text-2xl tracking-wide text-white">
               Save Your Score
             </h2>

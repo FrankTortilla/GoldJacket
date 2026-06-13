@@ -1,7 +1,8 @@
 # Gold Jacket - Handoff
 
 ## Status
-Prompts 1 through 7 are complete. The project is ready for the next prompt.
+Prompts 1 through 8 are complete. The application is production-build clean and
+ready for its final Vercel release.
 
 ## Completed
 - Prompt 1: Next.js 14 scaffold, Tailwind CSS, Supabase setup, fonts, brand colors, routes, and placeholder structure
@@ -39,10 +40,22 @@ Prompts 1 through 7 are complete. The project is ready for the next prompt.
   - `lib/scoutingReport.ts` - Anthropic Messages API integration and fallback copy
   - Results page generates a roster-specific report after game state loads
   - Scout report loading state uses animated bars and review copy
+- Prompt 8: Polish + Deploy
+  - Mobile layouts polished and verified at 390px across all five screens
+  - 48px minimum button targets and global horizontal overflow protection
+  - Home, draft transition, player selection, chemistry alert, win counter,
+    unit bar, and grade badge animations
+  - Coach chemistry IDs corrected to canonical player IDs
+  - Round 8 X Factor remains unrestricted after an era reroll
+  - Encoded share URLs now load without requiring a saved database result
+  - Coach pool bias matching corrected for position and era tags
+  - Supabase client initialization made lazy so production prerendering is safe
+  - Leaderboard tab switching and expanded mobile rosters verified
+  - Production build passes with no route or chunk over 500 kB
 - Scoring curve recalibrated to `-0.13 * (score - 65)`, rounded to whole wins, with integer draft-grade thresholds.
 
 ## Next
-Awaiting the next prompt.
+Commit, push, and complete the production Vercel release.
 
 ## Notes
 - All completed Prompt 2 and Prompt 3 work is integrated into `main`.
@@ -54,3 +67,6 @@ Awaiting the next prompt.
 - Tailwind brand colors are `navy`, `gold`, `gold-light`, `card`, and `card-border`.
 - CSS variables are defined in `app/globals.css`.
 - Run the Prompt 5 SQL in the Supabase dashboard before testing database features.
+- `npm run lint` and `npm run build` pass.
+- Largest first-load route is `/results` at 167 kB.
+- No raster images are used, so there are no image elements requiring lazy loading.

@@ -34,7 +34,7 @@ export const coaches: Coach[] = [
       multiplier: 1.20,
     },
     poolBias: ['DB', 'CB', 'S', 'Edge', 'DL', '2000s', '2010s'],
-    chemistryPlayers: ['ty_law', 'rodney_harrison', 'richard_seymour', 'tedy_bruschi', 'willie_mcginest'],
+    chemistryPlayers: ['tom-brady', 'randy-moss', 'rob-gronkowski', 'darrelle-revis'],
   },
   {
     id: 'walsh',
@@ -51,7 +51,7 @@ export const coaches: Coach[] = [
       multiplier: 1.20,
     },
     poolBias: ['QB', 'WR', 'TE', '1980s', '1990s'],
-    chemistryPlayers: ['joe_montana', 'jerry_rice', 'steve_young', 'dwight_clark', 'roger_craig'],
+    chemistryPlayers: ['joe-montana', 'jerry-rice', 'steve-young'],
   },
   {
     id: 'lombardi',
@@ -67,7 +67,7 @@ export const coaches: Coach[] = [
       multiplier: 1.10,
     },
     poolBias: ['1980s', '1990s', 'RB', 'LB'],
-    chemistryPlayers: ['bart_starr', 'paul_hornung', 'jim_taylor', 'ray_nitschke', 'forrest_gregg'],
+    chemistryPlayers: [],
   },
   {
     id: 'johnson',
@@ -83,7 +83,7 @@ export const coaches: Coach[] = [
       multiplier: 1.20,
     },
     poolBias: ['1990s', 'WR', 'RB', 'CB'],
-    chemistryPlayers: ['troy_aikman', 'emmitt_smith', 'michael_irvin', 'deion_sanders'],
+    chemistryPlayers: ['troy-aikman', 'emmitt-smith', 'michael-irvin', 'deion-sanders'],
   },
   {
     id: 'shanahan',
@@ -99,7 +99,7 @@ export const coaches: Coach[] = [
       multiplier: 1.20,
     },
     poolBias: ['RB', '1990s', '2000s'],
-    chemistryPlayers: ['terrell_davis', 'john_elway', 'clinton_portis', 'shannon_sharpe'],
+    chemistryPlayers: ['terrell-davis', 'john-elway', 'shannon-sharpe'],
   },
   {
     id: 'reid',
@@ -116,7 +116,7 @@ export const coaches: Coach[] = [
       multiplier: 1.20,
     },
     poolBias: ['WR', 'TE', '2000s', '2020s'],
-    chemistryPlayers: ['patrick_mahomes', 'travis_kelce', 'tyreek_hill', 'brian_westbrook'],
+    chemistryPlayers: ['patrick-mahomes', 'travis-kelce'],
   },
   {
     id: 'dungy',
@@ -133,7 +133,7 @@ export const coaches: Coach[] = [
       multiplier: 1.20,
     },
     poolBias: ['DB', 'CB', 'S', 'LB', '1990s', '2000s', '2010s'],
-    chemistryPlayers: ['peyton_manning', 'dwight_freeney', 'bob_sanders', 'reggie_wayne'],
+    chemistryPlayers: ['peyton-manning'],
   },
   {
     id: 'shula',
@@ -149,7 +149,7 @@ export const coaches: Coach[] = [
       multiplier: 1.08,
     },
     poolBias: [],
-    chemistryPlayers: ['dan_marino', 'larry_csonka', 'nick_buoniconti', 'mark_duper'],
+    chemistryPlayers: ['dan-marino'],
   },
 ];
 

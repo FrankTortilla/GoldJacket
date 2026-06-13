@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -35,7 +36,13 @@ import PlayerCard from '../../components/PlayerCard';
 import CoachCard from '../../components/CoachCard';
 import RosterSidebar from '../../components/RosterSidebar';
 
-type DraftPhase = 'coach-select' | 'spinning' | 'picking' | 'complete';
+type DraftPhase =
+  | 'coach-select'
+  | 'spinning'
+  | 'picking'
+  | 'selecting'
+  | 'round-transition'
+  | 'complete';
 
 interface PairAlert {
   label: string;
@@ -127,9 +134,6 @@ const coaches: RuntimeCoach[] = coachData.map((coach) => ({
     ...coach.bonus,
     unit: normalizeCoachUnit(coach.bonus.unit),
   },
-  chemistryPlayers: coach.chemistryPlayers.map((playerId) =>
-    playerId.replaceAll('_', '-')
-  ),
 }));
 
 function playerWithSlot(player: Player, rosterIndex: number): Player {
@@ -271,6 +275,23 @@ function DraftExperience() {
   const [rivalryAlert, setRivalryAlert] = useState<PairAlert | null>(null);
   const [mobileRosterOpen, setMobileRosterOpen] = useState(false);
   const [isFirstRound, setIsFirstRound] = useState(true);
+  const [selectingPlayerId, setSelectingPlayerId] = useState<string | null>(
+    null
+  );
+  const [completedRound, setCompletedRound] = useState<number | null>(null);
+  const selectionTimerRef = useRef<number | null>(null);
+  const roundTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (selectionTimerRef.current) {
+        window.clearTimeout(selectionTimerRef.current);
+      }
+      if (roundTimerRef.current) {
+        window.clearTimeout(roundTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const mode = searchParams.get('mode') === 'iq' ? 'iq' : 'classic';
@@ -290,6 +311,8 @@ function DraftExperience() {
     setCurrentOptions(previewOptions);
     setPhase('coach-select');
     setIsFirstRound(true);
+    setSelectingPlayerId(null);
+    setCompletedRound(null);
   }, [searchParams]);
 
   useEffect(() => {
@@ -340,90 +363,109 @@ function DraftExperience() {
       const drafted = players.find((player) => player.id === playerId);
       if (!drafted) return;
 
-      const draftedRound = gameState.currentRound;
-      const nextState = draftPlayer(gameState, playerId, players);
-      const playerIds = getRosterPlayerIds(nextState.roster);
-      const chemistryMatch = getChemistry(playerIds);
-      const rivalryMatch = getRivalry(playerIds);
-      const nextChemistry = chemistryMatch
-        ? {
-            label: chemistryMatch.pair.label,
-            icon: chemistryMatch.pair.icon,
-          }
-        : null;
-      const nextRivalry = rivalryMatch
-        ? {
-            label: rivalryMatch.pair.label,
-            icon: rivalryMatch.pair.icon,
-          }
-        : null;
-      const projection = calculateProjection(nextState.roster, selectedCoach);
-      const confidence = calculateCoachConfidence(
-        nextState.roster,
-        selectedCoach
-      );
-      const commentary = getDraftComment(
-        drafted,
-        nextChemistry,
-        nextRivalry
-      );
+      setSelectingPlayerId(playerId);
+      setPhase('selecting');
 
-      setChemistryAlert(nextChemistry);
-      setRivalryAlert(nextRivalry);
-      setLastPickComment(commentary);
-      setLiveWins(projection.wins);
-      setCoachConfidence(confidence);
+      selectionTimerRef.current = window.setTimeout(() => {
+        const draftedRound = gameState.currentRound;
+        const nextState = draftPlayer(gameState, playerId, players);
+        const playerIds = getRosterPlayerIds(nextState.roster);
+        const chemistryMatch = getChemistry(playerIds);
+        const rivalryMatch = getRivalry(playerIds);
+        const nextChemistry = chemistryMatch
+          ? {
+              label: chemistryMatch.pair.label,
+              icon: chemistryMatch.pair.icon,
+            }
+          : null;
+        const nextRivalry = rivalryMatch
+          ? {
+              label: rivalryMatch.pair.label,
+              icon: rivalryMatch.pair.icon,
+            }
+          : null;
+        const projection = calculateProjection(nextState.roster, selectedCoach);
+        const confidence = calculateCoachConfidence(
+          nextState.roster,
+          selectedCoach
+        );
+        const commentary = getDraftComment(
+          drafted,
+          nextChemistry,
+          nextRivalry
+        );
 
-      if (draftedRound === 8) {
-        const completedState = {
+        setSelectingPlayerId(null);
+        setChemistryAlert(nextChemistry);
+        setRivalryAlert(nextRivalry);
+        setLastPickComment(commentary);
+        setLiveWins(projection.wins);
+        setCoachConfidence(confidence);
+
+        if (draftedRound === 8) {
+          const completedState = {
+            ...nextState,
+            coach: selectedCoach,
+            isComplete: true,
+          };
+          const speedBonus = calculateSpeedBonus(
+            completedState.roundStartTimes
+          );
+          const finalWins = Math.min(17, projection.wins + speedBonus);
+          const result = {
+            gameState: completedState,
+            projectedWins: finalWins,
+            unitScores: projection.unitScores,
+            strengthRating: Math.round(
+              projection.unitScores.offense * 0.5 +
+                projection.unitScores.defense * 0.35 +
+                projection.unitScores.xfactor * 0.15
+            ),
+            draftGrade: calculateDraftGrade(finalWins),
+            speedBonus,
+            chemistry: chemistryMatch,
+            rivalry: rivalryMatch,
+          };
+
+          setGameState(completedState);
+          setPhase('complete');
+          window.sessionStorage.setItem(
+            'goldJacketGameState',
+            JSON.stringify(completedState)
+          );
+          window.sessionStorage.setItem(
+            'goldJacketResult',
+            JSON.stringify(result)
+          );
+          router.push('/results');
+          return;
+        }
+
+        const nextOptions = generateRoundOptions(
+          nextState.currentRound,
+          selectedCoach,
+          playerIds,
+          nextState.seed,
+          players
+        );
+        const roundOptions = [...nextState.roundOptions];
+        roundOptions[nextState.currentRound - 1] = nextOptions;
+
+        setGameState({
           ...nextState,
           coach: selectedCoach,
-          isComplete: true,
-        };
-        const speedBonus = calculateSpeedBonus(completedState.roundStartTimes);
-        const finalWins = Math.min(17, projection.wins + speedBonus);
-        const result = {
-          gameState: completedState,
-          projectedWins: finalWins,
-          unitScores: projection.unitScores,
-          draftGrade: calculateDraftGrade(finalWins),
-          speedBonus,
-          chemistry: chemistryMatch,
-          rivalry: rivalryMatch,
-        };
+          roundOptions,
+        });
+        setCompletedRound(draftedRound);
+        setPhase('round-transition');
 
-        setGameState(completedState);
-        setPhase('complete');
-        window.sessionStorage.setItem(
-          'goldJacketGameState',
-          JSON.stringify(completedState)
-        );
-        window.sessionStorage.setItem(
-          'goldJacketResult',
-          JSON.stringify(result)
-        );
-        router.push('/results');
-        return;
-      }
-
-      const nextOptions = generateRoundOptions(
-        nextState.currentRound,
-        selectedCoach,
-        playerIds,
-        nextState.seed,
-        players
-      );
-      const roundOptions = [...nextState.roundOptions];
-      roundOptions[nextState.currentRound - 1] = nextOptions;
-
-      setGameState({
-        ...nextState,
-        coach: selectedCoach,
-        roundOptions,
-      });
-      setCurrentOptions(nextOptions);
-      setIsFirstRound(false);
-      setPhase('spinning');
+        roundTimerRef.current = window.setTimeout(() => {
+          setCompletedRound(null);
+          setCurrentOptions(nextOptions);
+          setIsFirstRound(false);
+          setPhase('spinning');
+        }, 800);
+      }, 350);
     },
     [gameState, phase, router, selectedCoach]
   );
@@ -539,6 +581,60 @@ function DraftExperience() {
             transform: translateY(0);
           }
         }
+        @keyframes draftToRoster {
+          0% {
+            opacity: 1;
+            transform: scale(1) translate(0, 0);
+          }
+          45% {
+            opacity: 1;
+            transform: scale(0.92) translate(0, 8px);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(0.72) translate(42vw, -12px);
+          }
+        }
+        @keyframes roundComplete {
+          0%, 18% {
+            opacity: 0;
+            transform: scale(0.94);
+          }
+          30%, 72% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1.04);
+          }
+        }
+        @keyframes alertSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-18px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @media (max-width: 767px) {
+          @keyframes draftToRoster {
+            0% {
+              opacity: 1;
+              transform: scale(1) translate(0, 0);
+            }
+            45% {
+              opacity: 1;
+              transform: scale(0.92) translate(0, 8px);
+            }
+            100% {
+              opacity: 0;
+              transform: scale(0.72) translate(28vw, 35vh);
+            }
+          }
+        }
       `}</style>
       <div className="mx-auto flex min-h-screen max-w-[1500px]">
         <section className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
@@ -563,13 +659,13 @@ function DraftExperience() {
             })}
           </div>
 
-          <header className="mt-6 flex flex-col gap-4 border-b border-card-border pb-5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
+          <header className="mt-6 flex min-w-0 flex-col gap-4 border-b border-card-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
               <p className="font-[var(--font-bebas)] text-2xl tracking-wide text-gold">
                 Round {displayRound} of 8
               </p>
               <h1
-                className={`mt-1 font-[var(--font-bebas)] text-3xl tracking-wide ${
+                className={`mt-1 break-words font-[var(--font-bebas)] text-[clamp(1.65rem,8vw,1.875rem)] tracking-wide ${
                   isXFactorRound
                     ? 'animate-pulse bg-gradient-to-r from-gold via-gold-light to-gold bg-clip-text text-transparent'
                     : 'text-white'
@@ -585,12 +681,12 @@ function DraftExperience() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
               <button
                 type="button"
                 disabled={gameState.teamSkipsRemaining === 0 || phase !== 'picking'}
                 onClick={handleTeamSkip}
-                className="rounded-lg border border-card-border px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
+                className="min-w-0 rounded-lg border border-card-border px-2 py-2 text-[11px] font-bold text-gray-300 transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35 sm:px-3 sm:text-xs"
               >
                 TEAM SKIP ({gameState.teamSkipsRemaining})
               </button>
@@ -598,7 +694,7 @@ function DraftExperience() {
                 type="button"
                 disabled={gameState.eraSkipsRemaining === 0 || phase !== 'picking'}
                 onClick={handleEraSkip}
-                className="rounded-lg border border-card-border px-3 py-2 text-xs font-bold text-gray-300 transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
+                className="min-w-0 rounded-lg border border-card-border px-2 py-2 text-[11px] font-bold text-gray-300 transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-35 sm:px-3 sm:text-xs"
               >
                 ERA SKIP ({gameState.eraSkipsRemaining})
               </button>
@@ -649,7 +745,7 @@ function DraftExperience() {
 
           <div className="mt-6 space-y-3">
             {chemistryAlert && (
-              <div className="animate-pulse rounded-lg border border-green-400/50 bg-green-400/10 px-4 py-3 text-sm font-bold text-green-300">
+              <div className="animate-[alertSlideIn_300ms_ease-out] rounded-lg border border-green-400/50 bg-green-400/10 px-4 py-3 text-sm font-bold text-green-300">
                 {chemistryAlert.icon} {chemistryAlert.label} — Chemistry Bonus
                 Active!
               </div>
@@ -682,7 +778,8 @@ function DraftExperience() {
                       key={player.id}
                       player={player}
                       mode={gameState.mode}
-                      isSelected={false}
+                      isSelected={selectingPlayerId === player.id}
+                      isDrafting={selectingPlayerId === player.id}
                       onSelect={handlePlayerSelect}
                     />
                   ))}
@@ -709,6 +806,14 @@ function DraftExperience() {
           />
         </div>
       </div>
+
+      {completedRound !== null && (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-navy/80 px-6 backdrop-blur-sm">
+          <p className="animate-[roundComplete_800ms_ease-in-out_forwards] text-center font-[var(--font-bebas)] text-[clamp(2.25rem,10vw,4rem)] tracking-wider text-gold">
+            Round {completedRound} Complete
+          </p>
+        </div>
+      )}
 
       <button
         type="button"

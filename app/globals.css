@@ -15,3 +15,13 @@ body {
   background-color: var(--navy);
   color: var(--white);
 }
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+button {
+  min-height: 48px;
+}
