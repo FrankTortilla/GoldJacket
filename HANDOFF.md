@@ -1,7 +1,7 @@
 # Gold Jacket - Handoff
 
 ## Status
-Prompts 1, 2, 3, 4, 5, and 6 are complete. The project is ready for Prompt 7 - AI Scouting Report.
+Prompts 1 through 7 are complete. The project is ready for the next prompt.
 
 ## Completed
 - Prompt 1: Next.js 14 scaffold, Tailwind CSS, Supabase setup, fonts, brand colors, routes, and placeholder structure
@@ -35,14 +35,19 @@ Prompts 1, 2, 3, 4, 5, and 6 are complete. The project is ready for Prompt 7 - A
   - Web Share API wired up with a generated PNG image
   - Falls back to PNG download on desktop
   - Falls back to result URL copy on error
+- Prompt 7: AI scouting report
+  - `lib/scoutingReport.ts` - Anthropic Messages API integration and fallback copy
+  - Results page generates a roster-specific report after game state loads
+  - Scout report loading state uses animated bars and review copy
 - Scoring curve recalibrated to `-0.13 * (score - 65)`, rounded to whole wins, with integer draft-grade thresholds.
 
 ## Next
-Prompt 7 - AI Scouting Report.
+Awaiting the next prompt.
 
 ## Notes
 - All completed Prompt 2 and Prompt 3 work is integrated into `main`.
 - `.env.local` is gitignored and must contain the real Supabase credentials for local testing.
+- `.env.local` must also contain `NEXT_PUBLIC_ANTHROPIC_API_KEY` for live scouting reports.
 - `next.config.mjs` is used for Next.js 14.
 - `autoprefixer` is included in devDependencies for Tailwind PostCSS.
 - Font variables are `--font-bebas` and `--font-figtree`.

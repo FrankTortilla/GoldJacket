@@ -20,6 +20,7 @@ interface ResultCardProps {
   strengthRating: number;
   draftGrade: string;
   scoutingReport: string;
+  isLoadingReport: boolean;
   isGoldJacket: boolean;
   bustPlayer: Player | null;
 }
@@ -109,6 +110,7 @@ export default function ResultCard({
   strengthRating,
   draftGrade,
   scoutingReport,
+  isLoadingReport,
   isGoldJacket,
   bustPlayer,
 }: ResultCardProps) {
@@ -251,15 +253,20 @@ export default function ResultCard({
         <p className="text-xs font-bold uppercase tracking-wider text-gold">
           Scout Report
         </p>
-        {scoutingReport ? (
+        {!isLoadingReport && scoutingReport ? (
           <p className="mt-3 italic leading-relaxed text-gray-300">
             {scoutingReport}
           </p>
         ) : (
-          <div className="mt-4 animate-pulse space-y-3" aria-label="Loading scout report">
-            <div className="h-3 w-full rounded bg-gray-700" />
-            <div className="h-3 w-5/6 rounded bg-gray-700" />
-            <div className="h-3 w-2/3 rounded bg-gray-700" />
+          <div className="mt-4" aria-label="Loading scout report">
+            <div className="animate-pulse space-y-3">
+              <div className="h-3 w-full rounded bg-gray-700" />
+              <div className="h-3 w-5/6 rounded bg-gray-700" />
+              <div className="h-3 w-2/3 rounded bg-gray-700" />
+            </div>
+            <p className="mt-4 text-sm italic text-gray-500">
+              Scout is reviewing your roster...
+            </p>
           </div>
         )}
       </div>

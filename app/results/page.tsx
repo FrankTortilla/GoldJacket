@@ -13,6 +13,7 @@ import dynamic from 'next/dynamic';
 import { toPng } from 'html-to-image';
 import ShareCard from '../../components/ShareCard';
 import { encodeResult } from '../../lib/shareUtils';
+import { generateScoutingReport } from '../../lib/scoutingReport';
 import {
   getResultByShareCode,
   saveResult,
@@ -39,6 +40,7 @@ interface ResultCardProps {
   strengthRating: number;
   draftGrade: string;
   scoutingReport: string;
+  isLoadingReport: boolean;
   isGoldJacket: boolean;
   bustPlayer: Player | null;
   onShare?: () => void;
@@ -266,6 +268,8 @@ function ResultsExperience() {
   const [isNotFound, setIsNotFound] = useState(false);
   const [isNewPersonalBest, setIsNewPersonalBest] = useState(false);
   const [shareToast, setShareToast] = useState(false);
+  const [scoutingReport, setScoutingReport] = useState('');
+  const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [nickname, setNickname] = useState('');
   const [trashTalk, setTrashTalk] = useState('');
   const [saveStatus, setSaveStatus] = useState<
@@ -374,6 +378,35 @@ function ResultsExperience() {
       isCancelled = true;
     };
   }, [router, searchParams]);
+
+  useEffect(() => {
+    if (!result) return;
+
+    let isCancelled = false;
+    setIsLoadingReport(true);
+
+    void generateScoutingReport({
+      roster: result.roster.map((player) => ({
+        name: player.name,
+        position: player.position,
+        decade: player.era,
+        positionScore: player.positionScore,
+      })),
+      coachName: result.coach.name,
+      projectedWins: result.projectedWins,
+      draftGrade: result.draftGrade,
+      bustPlayerName: result.bustPlayer?.name ?? 'None identified',
+      unitScores: result.unitScores,
+    }).then((report) => {
+      if (isCancelled) return;
+      setScoutingReport(report);
+      setIsLoadingReport(false);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [result]);
 
   useEffect(() => {
     if (!result) return;
@@ -586,7 +619,8 @@ function ResultsExperience() {
             unitScores={result.unitScores}
             strengthRating={result.strengthRating}
             draftGrade={result.draftGrade}
-            scoutingReport={result.scoutingReport}
+            scoutingReport={scoutingReport}
+            isLoadingReport={isLoadingReport}
             isGoldJacket={result.achievedGoldJacket}
             bustPlayer={result.bustPlayer}
             onShare={handleShare}
