@@ -76,7 +76,7 @@ export default function Home() {
           </p>
           {personalBest !== null && (
             <p className="mt-3 text-sm font-bold text-gold">
-              Your best: {personalBest.toFixed(1)} wins
+              Your best: {Math.round(personalBest)} wins
             </p>
           )}
           <div

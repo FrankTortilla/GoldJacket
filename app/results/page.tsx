@@ -170,8 +170,9 @@ function normalizeCompletedGame(
   const unitScores = isUnitScores(scoreResult.unitScores)
     ? scoreResult.unitScores
     : getFallbackUnitScores(providedWins ?? 10);
-  const projectedWins =
-    providedWins ?? projectWins(unitScores, 1);
+  const projectedWins = Math.round(
+    providedWins ?? projectWins(unitScores, 1)
+  );
   const strengthRating =
     typeof scoreResult.strengthRating === 'number'
       ? scoreResult.strengthRating
@@ -537,7 +538,7 @@ function ResultsExperience() {
 
         {isNewPersonalBest && (
           <div className="mt-4 animate-[slideDown_500ms_ease-out] rounded-xl bg-gold px-4 py-3 text-center text-sm font-bold text-navy shadow-[0_0_18px_rgba(201,168,76,0.35)]">
-            NEW PERSONAL BEST — {result.projectedWins.toFixed(1)} wins
+            NEW PERSONAL BEST — {result.projectedWins} wins
           </div>
         )}
 

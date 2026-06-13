@@ -129,7 +129,7 @@ export default function ResultCard({
       <header className="text-center">
         <div className="flex flex-wrap items-center justify-center gap-3">
           <p className="font-[var(--font-bebas)] text-[56px] leading-none tracking-wide text-gold">
-            {projectedWins.toFixed(1)} / 17
+            {projectedWins} / 17
           </p>
           <span
             className={`rounded-full px-4 py-1.5 text-sm font-bold ${getGradeClasses(resolvedDraftGrade)}`}

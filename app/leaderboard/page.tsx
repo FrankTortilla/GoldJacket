@@ -29,7 +29,7 @@ const MOCK_RESULTS: LeaderboardEntry[] = [
     playerName: 'Steve',
     coachId: 'belichick',
     coachName: 'Belichick',
-    projectedWins: 16.8,
+    projectedWins: 17,
     draftGrade: 'A+',
     isGoldJacket: true,
     gameMode: 'classic',
@@ -51,7 +51,7 @@ const MOCK_RESULTS: LeaderboardEntry[] = [
     playerName: 'Marcus',
     coachId: 'walsh',
     coachName: 'Walsh',
-    projectedWins: 15.2,
+    projectedWins: 15,
     draftGrade: 'A',
     isGoldJacket: false,
     gameMode: 'classic',
@@ -73,7 +73,7 @@ const MOCK_RESULTS: LeaderboardEntry[] = [
     playerName: 'Jordan',
     coachId: 'reid',
     coachName: 'Andy Reid',
-    projectedWins: 14.7,
+    projectedWins: 15,
     draftGrade: 'A',
     isGoldJacket: false,
     gameMode: 'iq',
@@ -95,7 +95,7 @@ const MOCK_RESULTS: LeaderboardEntry[] = [
     playerName: 'Tyler',
     coachId: 'dungy',
     coachName: 'Dungy',
-    projectedWins: 13.1,
+    projectedWins: 13,
     draftGrade: 'B+',
     isGoldJacket: false,
     gameMode: 'classic',
@@ -117,7 +117,7 @@ const MOCK_RESULTS: LeaderboardEntry[] = [
     playerName: 'Chris',
     coachId: 'lombardi',
     coachName: 'Lombardi',
-    projectedWins: 12.4,
+    projectedWins: 12,
     draftGrade: 'B',
     isGoldJacket: false,
     gameMode: 'iq',
@@ -383,7 +383,7 @@ export default function LeaderboardPage() {
                       <div className="flex shrink-0 items-center gap-3">
                         <div className="text-right">
                           <p className="font-[var(--font-bebas)] text-3xl leading-none text-white sm:text-4xl">
-                            {result.projectedWins.toFixed(1)}
+                            {Math.round(result.projectedWins)}
                           </p>
                           <p className="mt-1 text-[10px] uppercase tracking-widest text-gray-600">
                             Wins

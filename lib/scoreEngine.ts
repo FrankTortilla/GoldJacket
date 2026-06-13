@@ -88,14 +88,13 @@ export function calculateBustPenalty(players: Player[], bustPlayerId: string): P
 
 export function projectWins(unitScores: UnitScores, coachMultiplier: number): number {
   // Calibration check (actual values):
-  // score 55  → ~3.5 wins
-  // score 62  → ~7.0 wins
-  // score 70  → ~11.0 wins
-  // score 78  → ~14.5 wins
-  // score 86  → ~16.0 wins
-  // score 93  → ~16.5 wins
-  // score 98  → ~17.0 wins
-  // score 100 → ~17.0 wins
+  // score 55  → ~4 wins
+  // score 62  → ~7 wins
+  // score 70  → ~11 wins
+  // score 78  → ~14 wins
+  // score 86  → ~16 wins
+  // score 93  → ~17 wins
+  // score 98  → ~17 wins
   const baseScore =
     unitScores.offense * 0.5 +
     unitScores.defense * 0.35 +
@@ -103,7 +102,7 @@ export function projectWins(unitScores: UnitScores, coachMultiplier: number): nu
 
   const totalScore = baseScore * coachMultiplier;
   const raw = 17 / (1 + Math.exp(-0.13 * (totalScore - 65)));
-  const rounded = Math.round(raw * 2) / 2;
+  const rounded = Math.round(raw);
   return rounded;
 }
 
@@ -112,16 +111,16 @@ export function calculateStrengthRating(totalScore: number): number {
 }
 
 export function calculateDraftGrade(projectedWins: number): string {
-  if (projectedWins >= 16.0) return 'A+';
-  if (projectedWins >= 14.0) return 'A';
-  if (projectedWins >= 12.5) return 'B+';
-  if (projectedWins >= 11.0) return 'B';
-  if (projectedWins >= 9.5) return 'C+';
-  if (projectedWins >= 8.0) return 'C';
-  if (projectedWins >= 6.0) return 'D';
+  if (projectedWins === 17) return 'A+';
+  if (projectedWins >= 15) return 'A';
+  if (projectedWins >= 13) return 'B+';
+  if (projectedWins >= 11) return 'B';
+  if (projectedWins >= 9) return 'C+';
+  if (projectedWins >= 7) return 'C';
+  if (projectedWins >= 5) return 'D';
   return 'F';
 }
 
 export function isGoldJacket(projectedWins: number): boolean {
-  return projectedWins >= 16.5;
+  return projectedWins === 17;
 }

@@ -21,7 +21,7 @@ const MOCK_HOF: HallOfFameEntry[] = [
     id: '1',
     playerName: 'Steve',
     coachName: 'Belichick',
-    projectedWins: 17.0,
+    projectedWins: 17,
     draftGrade: 'A+',
     roster: [
       { name: 'Joe Montana', position: 'QB', decade: '1980s' },
@@ -172,7 +172,7 @@ export default function HallOfFamePage() {
               >
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
                   <span className="rounded-full bg-gold px-3 py-1 text-xs font-black text-navy">
-                    {entry.projectedWins.toFixed(0)}-0
+                    {Math.round(entry.projectedWins)}-0
                   </span>
                   <div className="min-w-0 text-center">
                     <h2 className="truncate font-[var(--font-bebas)] text-[22px] tracking-wide text-gold">
