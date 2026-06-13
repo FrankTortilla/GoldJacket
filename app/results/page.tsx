@@ -3,12 +3,15 @@
 import {
   Suspense,
   useEffect,
+  useRef,
   useState,
   type ComponentType,
   type MouseEvent,
 } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { toPng } from 'html-to-image';
+import ShareCard from '../../components/ShareCard';
 import { encodeResult } from '../../lib/shareUtils';
 import {
   getResultByShareCode,
@@ -257,6 +260,7 @@ function normalizeDatabaseResult(gameResult: GameResult): DisplayResult | null {
 function ResultsExperience() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const shareCardRef = useRef<HTMLDivElement>(null);
   const [result, setResult] = useState<DisplayResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -290,6 +294,7 @@ function ResultsExperience() {
         }
 
         setSavedShareCode(code);
+        setNickname(databaseResult?.playerName ?? '');
         setSaveStatus('success');
         setResult(sharedResult);
         setIsLoading(false);
@@ -419,8 +424,39 @@ function ResultsExperience() {
       });
     const shareUrl = `${window.location.origin}/results?code=${encodeURIComponent(code)}`;
 
-    await window.navigator.clipboard.writeText(shareUrl);
-    setShareToast(true);
+    try {
+      if (!shareCardRef.current) return;
+
+      const dataUrl = await toPng(shareCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], 'gold-jacket-roster.png', {
+        type: 'image/png',
+      });
+
+      if (
+        window.navigator.share &&
+        window.navigator.canShare?.({ files: [file] })
+      ) {
+        await window.navigator.share({
+          title: 'Gold Jacket',
+          text: `I projected ${result.projectedWins} wins. Can you beat it?`,
+          url: shareUrl,
+          files: [file],
+        });
+      } else {
+        const link = document.createElement('a');
+        link.download = 'gold-jacket-roster.png';
+        link.href = dataUrl;
+        link.click();
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      await window.navigator.clipboard.writeText(shareUrl);
+      setShareToast(true);
+    }
   }
 
   function handleReset() {
@@ -617,6 +653,32 @@ function ResultsExperience() {
           Link copied!
         </div>
       )}
+
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '-9999px',
+          pointerEvents: 'none',
+        }}
+      >
+        <div ref={shareCardRef} style={{ width: '390px', height: '680px' }}>
+          <ShareCard
+            roster={result.roster.map((player) => ({
+              name: player.name,
+              position: player.position,
+              decade: player.era,
+              positionScore: player.positionScore,
+            }))}
+            coachName={result.coach.name}
+            projectedWins={result.projectedWins}
+            draftGrade={result.draftGrade}
+            unitScores={result.unitScores}
+            isGoldJacket={result.achievedGoldJacket}
+            playerName={nickname.trim() || 'Anonymous'}
+          />
+        </div>
+      </div>
 
       <style>{`
         @keyframes slideDown {

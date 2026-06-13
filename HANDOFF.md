@@ -1,7 +1,7 @@
 # Gold Jacket - Handoff
 
 ## Status
-Prompts 1, 2, 3, 4, and 5 are complete. The project is ready for Prompt 6 - Shareable roster card.
+Prompts 1, 2, 3, 4, 5, and 6 are complete. The project is ready for Prompt 7 - AI Scouting Report.
 
 ## Completed
 - Prompt 1: Next.js 14 scaffold, Tailwind CSS, Supabase setup, fonts, brand colors, routes, and placeholder structure
@@ -30,10 +30,15 @@ Prompts 1, 2, 3, 4, and 5 are complete. The project is ready for Prompt 6 - Shar
   - Results saving and share-code loading
   - Live leaderboard and Hall of Fame data
   - Home screen personal-best banner
+- Prompt 6: Shareable roster card
+  - `components/ShareCard.tsx` - fixed-size card built with inline styles
+  - Web Share API wired up with a generated PNG image
+  - Falls back to PNG download on desktop
+  - Falls back to result URL copy on error
 - Scoring curve recalibrated to `-0.13 * (score - 65)`, rounded to whole wins, with integer draft-grade thresholds.
 
 ## Next
-Prompt 6 - Shareable roster card.
+Prompt 7 - AI Scouting Report.
 
 ## Notes
 - All completed Prompt 2 and Prompt 3 work is integrated into `main`.
