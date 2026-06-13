@@ -1,8 +1,8 @@
 # Gold Jacket - Handoff
 
 ## Status
-Prompts 1 through 8 are complete. The application is production-build clean and
-ready for its final Vercel release.
+Prompts 1 through 8 are complete. The application is live in production at
+https://gold-jacket-omega.vercel.app.
 
 ## Completed
 - Prompt 1: Next.js 14 scaffold, Tailwind CSS, Supabase setup, fonts, brand colors, routes, and placeholder structure
@@ -55,7 +55,9 @@ ready for its final Vercel release.
 - Scoring curve recalibrated to `-0.13 * (score - 65)`, rounded to whole wins, with integer draft-grade thresholds.
 
 ## Next
-Commit, push, and complete the production Vercel release.
+No pending code work. Configure the Gold Jacket Supabase project credentials
+and a server-side Anthropic API key in Vercel when those production resources
+are available.
 
 ## Notes
 - All completed Prompt 2 and Prompt 3 work is integrated into `main`.
@@ -70,3 +72,8 @@ Commit, push, and complete the production Vercel release.
 - `npm run lint` and `npm run build` pass.
 - Largest first-load route is `/results` at 167 kB.
 - No raster images are used, so there are no image elements requiring lazy loading.
+- Vercel project: `steve-6797s-projects/gold-jacket`.
+- Production deploy verified at 390px with no browser console warnings or errors.
+- The Vercel project currently has no environment variables. Database screens
+  use their mock/fallback states, saves are unavailable, and scouting reports
+  use fallback copy until production credentials are configured.
