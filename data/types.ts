@@ -1,4 +1,13 @@
-export type Position = 'QB' | 'RB' | 'WR' | 'TE' | 'DE' | 'DT' | 'LB' | 'CB' | 'S';
+export type Position =
+  | 'QB'
+  | 'RB'
+  | 'WR'
+  | 'TE'
+  | 'DL'
+  | 'Edge'
+  | 'LB'
+  | 'CB'
+  | 'S';
 export type Decade = '1980s' | '1990s' | '2000s' | '2010s' | '2020s';
 export type Unit = 'offense' | 'defense' | 'xfactor' | 'all';
 export type SlotType = 'QB' | 'RB' | 'WR_TE' | 'DL_LB' | 'DB' | 'XFACTOR';
@@ -30,10 +39,14 @@ export interface Player {
   id: string;
   name: string;
   position: Position;
-  team: string; // peak-era team
-  decade: Decade; // primary peak decade — determines draft round eligibility
-  stats: PlayerStats; // peak single-season stats
-  score: number; // 0-100 normalized quality within position group
+  team: string;
+  decade: Decade;
+  peakYear: number;
+  stats: PlayerStats;
+  positionScore: number;
+  eraMultiplier: number;
+  superBowlRings: number;
+  bio: string;
 }
 
 export interface CoachMultiplier {
@@ -74,7 +87,7 @@ export const SLOT_POSITIONS: Record<SlotType, Position[]> = {
   QB:      ['QB'],
   RB:      ['RB'],
   WR_TE:   ['WR', 'TE'],
-  DL_LB:   ['DE', 'DT', 'LB'],
+  DL_LB:   ['DL', 'Edge', 'LB'],
   DB:      ['CB', 'S'],
-  XFACTOR: ['QB', 'RB', 'WR', 'TE', 'DE', 'DT', 'LB', 'CB', 'S'],
+  XFACTOR: ['QB', 'RB', 'WR', 'TE', 'DL', 'Edge', 'LB', 'CB', 'S'],
 };

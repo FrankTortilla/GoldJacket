@@ -111,8 +111,8 @@ const players: RuntimePlayer[] = playerData.map((player) => ({
   ...player,
   position: normalizePosition(player.position),
   era: player.decade,
-  positionScore: player.score,
-  eraMultiplier: 1,
+  positionScore: player.positionScore,
+  eraMultiplier: player.eraMultiplier,
 }));
 
 function normalizeCoachUnit(unit: string): Coach['bonus']['unit'] {
