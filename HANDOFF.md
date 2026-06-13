@@ -1,7 +1,7 @@
 # Gold Jacket - Handoff
 
 ## Status
-Prompts 1, 2, and 3 are complete. The project is ready for Prompt 4 - UI Screens.
+Prompts 1, 2, 3, and 4 are complete. The project is ready for Prompt 5 - Supabase integration.
 
 ## Completed
 - Prompt 1: Next.js 14 scaffold, Tailwind CSS, Supabase setup, fonts, brand colors, routes, and placeholder structure
@@ -13,9 +13,21 @@ Prompts 1, 2, and 3 are complete. The project is ready for Prompt 4 - UI Screens
   - `lib/gameEngine.ts` - full draft flow
   - `lib/dailyChallenge.ts` - UTC-safe daily seed
   - `lib/shareUtils.ts` - base64 share-code encoding and decoding
+- Prompt 4: UI screens and supporting draft interactions
+  - `components/PlayerCard.tsx`
+  - `components/CoachCard.tsx`
+  - `components/SlotMachine.tsx`
+  - `components/RosterSidebar.tsx`
+  - `components/ResultCard.tsx`
+  - `data/rivalries.ts`
+  - `app/page.tsx`
+  - `app/draft/page.tsx`
+  - `app/results/page.tsx`
+  - `app/leaderboard/page.tsx`
+  - `app/hof/page.tsx`
 
 ## Next
-Prompt 4 - UI Screens. Start with the first UI component and build the draft experience against the completed data and game engines.
+Prompt 5 - Supabase integration.
 
 ## Notes
 - All completed Prompt 2 and Prompt 3 work is integrated into `main`.
