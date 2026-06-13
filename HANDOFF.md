@@ -30,7 +30,7 @@ Prompts 1, 2, 3, 4, and 5 are complete. The project is ready for Prompt 6 - Shar
   - Results saving and share-code loading
   - Live leaderboard and Hall of Fame data
   - Home screen personal-best banner
-- Scoring curve recalibrated to `-0.05 * (score - 92)` with updated draft-grade thresholds.
+- Scoring curve recalibrated to `-0.12 * (score - 75)` with updated draft-grade thresholds.
 
 ## Next
 Prompt 6 - Shareable roster card.
